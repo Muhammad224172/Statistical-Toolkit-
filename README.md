@@ -22,10 +22,16 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python -m ipykernel install --user --name statistical-toolkit --display-name "Python (Statistical Toolkit)"
-jupyter notebook
+jupyter notebook --no-browser --ServerApp.token="" --ServerApp.password="" --port=8890
 ```
 
-Then open the notebooks from the `notebooks/` folder.
+Then open this address in your browser:
+
+```text
+http://127.0.0.1:8890/tree/notebooks
+```
+
+Open a notebook from the `notebooks/` folder.
 
 When a notebook opens, select the kernel named `Python (Statistical Toolkit)`.
 
@@ -37,10 +43,16 @@ After the first-time setup is finished, you do not need to recreate the environm
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
-jupyter notebook
+jupyter notebook --no-browser --ServerApp.token="" --ServerApp.password="" --port=8890
 ```
 
-In the browser page that opens:
+Then open:
+
+```text
+http://127.0.0.1:8890/tree/notebooks
+```
+
+In that page:
 
 1. Open the `notebooks/` folder.
 2. Open one of the four notebooks.
@@ -55,7 +67,7 @@ Direct notebook paths:
 - `notebooks/03_regression_airquality.ipynb`
 - `notebooks/04_bayesian_titanic.ipynb`
 
-If `jupyter notebook` opens but the project files are not visible, close it, make sure PowerShell is inside this project folder, and run `jupyter notebook` again.
+If another Jupyter page asks for a password or token, it is usually an older server on a different port such as `8888`. Use the `8890` link above, or close the old Jupyter windows and run the command again from this project folder.
 
 ## Project Files
 
@@ -206,7 +218,7 @@ Before presentation, run:
 ```powershell
 .\.venv\Scripts\Activate.ps1
 python -m compileall classical_toolbox.py anova_toolbox.py regression_toolbox.py bayesian_toolbox.py
-jupyter notebook
+jupyter notebook --no-browser --ServerApp.token="" --ServerApp.password="" --port=8890
 ```
 
 Then run each notebook from a clean kernel using `Python (Statistical Toolkit)`.
