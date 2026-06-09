@@ -125,11 +125,10 @@ class RegressionToolbox:
         Xnew = np.column_stack([np.ones(len(df)), df[result["x_cols"]].to_numpy(float)])
         pred = Xnew @ result["coefficients"]
         h = np.sum((Xnew @ np.linalg.inv(result["X"].T @ result["X"])) * Xnew, axis=1)
-        mult = 1 if interval == "mean" else 1 + h
         if interval == "mean":
             se = np.sqrt(result["mse"] * h)
         elif interval == "prediction":
-            se = np.sqrt(result["mse"] * mult)
+            se = np.sqrt(result["mse"] * (1 + h))
         else:
             raise ValueError("interval must be 'mean' or 'prediction'.")
         q = stats.t(df=result["df_resid"]).ppf(1 - (1 - confidence) / 2)
@@ -197,11 +196,55 @@ class RegressionToolbox:
                 "df": (q, result["df_resid"]), "alpha": alpha,
                 "decision": "Reject H0" if p_value < alpha else "Fail to reject H0"}
 
+    def scheffe_mean_response_band(self, result, x_col=None, grid=None, alpha=0.05):
+        if len(result["x_cols"]) != 1:
+            raise ValueError("Scheffe bands in this toolbox are plotted for simple regression only.")
+        x_name = x_col or result["x_cols"][0]
+        x = result["data"][x_name].to_numpy(float)
+        if grid is None:
+            grid = np.linspace(x.min(), x.max(), 150)
+        Xnew = np.column_stack([np.ones(len(grid)), grid])
+        pred = Xnew @ result["coefficients"]
+        xtx_inv = np.linalg.inv(result["X"].T @ result["X"])
+        h = np.sum((Xnew @ xtx_inv) * Xnew, axis=1)
+        p = result["p"]
+        multiplier = np.sqrt(p * stats.f.ppf(1 - alpha, p, result["df_resid"]))
+        se_mean = np.sqrt(result["mse"] * h)
+        return pd.DataFrame({
+            x_name: grid,
+            "fit": pred,
+            "lower": pred - multiplier * se_mean,
+            "upper": pred + multiplier * se_mean,
+            "scheffe_multiplier": multiplier,
+        })
+
+    def scheffe_prediction_band(self, result, x_col=None, grid=None, alpha=0.05):
+        if len(result["x_cols"]) != 1:
+            raise ValueError("Scheffe-style prediction bands in this toolbox are plotted for simple regression only.")
+        x_name = x_col or result["x_cols"][0]
+        x = result["data"][x_name].to_numpy(float)
+        if grid is None:
+            grid = np.linspace(x.min(), x.max(), 150)
+        Xnew = np.column_stack([np.ones(len(grid)), grid])
+        pred = Xnew @ result["coefficients"]
+        xtx_inv = np.linalg.inv(result["X"].T @ result["X"])
+        h = np.sum((Xnew @ xtx_inv) * Xnew, axis=1)
+        p = result["p"]
+        multiplier = np.sqrt(p * stats.f.ppf(1 - alpha, p, result["df_resid"]))
+        se_pred = np.sqrt(result["mse"] * (1 + h))
+        return pd.DataFrame({
+            x_name: grid,
+            "fit": pred,
+            "lower": pred - multiplier * se_pred,
+            "upper": pred + multiplier * se_pred,
+            "scheffe_multiplier": multiplier,
+        })
+
     def plot_simple_regression(self, result):
         if len(result["x_cols"]) != 1:
             raise ValueError("Simple regression plot requires exactly one predictor.")
         x_col, y_col = result["x_cols"][0], result["y_col"]
-        fig, ax = plt.subplots(figsize=(7, 4.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.scatter(result["data"][x_col], result["y"], color="#1f4e79", alpha=0.8)
         order = np.argsort(result["data"][x_col].to_numpy())
         ax.plot(result["data"][x_col].to_numpy()[order], result["fitted"][order], color="#c00000", lw=2)
@@ -212,7 +255,7 @@ class RegressionToolbox:
         return fig, ax
 
     def plot_observed_vs_fitted(self, result):
-        fig, ax = plt.subplots(figsize=(6, 5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.scatter(result["fitted"], result["y"], color="#1f4e79")
         lo, hi = min(result["fitted"].min(), result["y"].min()), max(result["fitted"].max(), result["y"].max())
         ax.plot([lo, hi], [lo, hi], color="black", ls="--")
@@ -223,19 +266,12 @@ class RegressionToolbox:
         return fig, ax
 
     def plot_residuals_vs_fitted(self, result):
-        fig, ax = plt.subplots(figsize=(7, 4.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.scatter(result["fitted"], result["residuals"], color="#1f4e79")
         ax.axhline(0, color="black", lw=1)
         ax.set_xlabel("Fitted")
         ax.set_ylabel("Residual")
         ax.set_title("Residuals vs fitted")
-        fig.tight_layout()
-        return fig, ax
-
-    def plot_qq_residuals(self, result):
-        fig, ax = plt.subplots(figsize=(6, 5))
-        stats.probplot(result["residuals"], dist="norm", plot=ax)
-        ax.set_title("Residual normal Q-Q plot")
         fig.tight_layout()
         return fig, ax
 
@@ -248,7 +284,7 @@ class RegressionToolbox:
         vals = [test_result["statistic"]] + [v for v in crit if v is not None]
         xs = np.linspace(min(dist.ppf(0.001), min(vals) - 1), max(dist.ppf(0.999), max(vals) + 1), 700)
         ys = dist.pdf(xs)
-        fig, ax = plt.subplots(figsize=(8, 4.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(xs, ys, color="#1f4e79", label=f"t({test_result['df']}) under H0")
         if test_result["alternative"] == "greater":
             ax.fill_between(xs, 0, ys, where=xs >= crit[0], color="#f4b183", alpha=0.7, label="Critical region")
@@ -269,12 +305,28 @@ class RegressionToolbox:
         hi = max(dist.ppf(0.995), test_result["critical_value"] * 1.2, test_result["statistic"] * 1.2)
         xs = np.linspace(0, hi, 700)
         ys = dist.pdf(xs)
-        fig, ax = plt.subplots(figsize=(8, 4.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(xs, ys, color="#1f4e79", label=f"F({df1}, {df2}) under H0")
         ax.fill_between(xs, 0, ys, where=xs >= test_result["critical_value"], color="#f4b183", alpha=0.7,
                         label="Critical region")
         ax.axvline(test_result["statistic"], color="#c00000", lw=2, label=f"Observed F = {test_result['statistic']:.3f}")
         ax.set_title(test_result["label"])
+        ax.legend()
+        fig.tight_layout()
+        return fig, ax
+
+    def plot_scheffe_band(self, result, band, title="Scheffe simultaneous mean response band"):
+        if len(result["x_cols"]) != 1:
+            raise ValueError("Scheffe band plot requires a simple regression result.")
+        x_col = result["x_cols"][0]
+        y_col = result["y_col"]
+        fig, ax = plt.subplots(figsize=(11, 7))
+        ax.scatter(result["data"][x_col], result["y"], color="#1f4e79", alpha=0.75, label="Observed data")
+        ax.plot(band[x_col], band["fit"], color="#c00000", lw=2, label="Fitted line")
+        ax.fill_between(band[x_col], band["lower"], band["upper"], color="#9dc3e6", alpha=0.55, label="Band")
+        ax.set_xlabel(x_col)
+        ax.set_ylabel(y_col)
+        ax.set_title(title)
         ax.legend()
         fig.tight_layout()
         return fig, ax

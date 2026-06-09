@@ -178,7 +178,7 @@ class ANOVAToolbox:
 
     def plot_group_boxplot(self, group_col, value_col):
         df = self._clean(group_col, value_col)
-        fig, ax = plt.subplots(figsize=(7, 4.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         df.boxplot(column=value_col, by=group_col, ax=ax)
         ax.set_title(f"{value_col} by {group_col}")
         fig.suptitle("")
@@ -190,7 +190,7 @@ class ANOVAToolbox:
         alpha = 1 - confidence
         q = stats.t(df=summary["count"] - 1).ppf(1 - alpha / 2)
         err = q * summary["std"] / np.sqrt(summary["count"])
-        fig, ax = plt.subplots(figsize=(7, 4.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.errorbar(summary.index.astype(str), summary["mean"], yerr=err, fmt="o", capsize=5, color="#1f4e79")
         ax.set_title(f"Group means with {confidence:.0%} confidence intervals")
         ax.set_ylabel(value_col)
@@ -203,7 +203,7 @@ class ANOVAToolbox:
         hi = max(dist.ppf(0.995), result["statistic"] * 1.2, result["critical_value"] * 1.2)
         xs = np.linspace(0, hi, 700)
         ys = dist.pdf(xs)
-        fig, ax = plt.subplots(figsize=(8, 4.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(xs, ys, color="#1f4e79", lw=2, label=f"F({df1}, {df2}) under H0")
         ax.fill_between(xs, 0, ys, where=xs >= result["critical_value"], color="#f4b183", alpha=0.7,
                         label="Critical region")
@@ -219,7 +219,7 @@ class ANOVAToolbox:
         vals = [result["statistic"]] + [v for v in crit if v is not None]
         xs = np.linspace(min(dist.ppf(0.001), min(vals) - 1), max(dist.ppf(0.999), max(vals) + 1), 700)
         ys = dist.pdf(xs)
-        fig, ax = plt.subplots(figsize=(8, 4.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(xs, ys, color="#1f4e79", label=f"t({result['df']}) under H0")
         if result["alternative"] == "greater":
             ax.fill_between(xs, 0, ys, where=xs >= crit[0], color="#f4b183", alpha=0.7, label="Critical region")
@@ -238,14 +238,14 @@ class ANOVAToolbox:
         df = result["data"].copy()
         means = df.groupby(result["group_col"])[result["value_col"]].transform("mean")
         residuals = df[result["value_col"]] - means
-        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-        axes[0].scatter(means, residuals, color="#1f4e79")
-        axes[0].axhline(0, color="black", lw=1)
-        axes[0].set_title("Residuals vs fitted group means")
-        stats.probplot(residuals, dist="norm", plot=axes[1])
-        axes[1].set_title("Normal Q-Q plot")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.scatter(means, residuals, color="#1f4e79")
+        ax.axhline(0, color="black", lw=1)
+        ax.set_xlabel("Fitted group mean")
+        ax.set_ylabel("Residual")
+        ax.set_title("Residuals vs fitted group means")
         fig.tight_layout()
-        return fig, axes
+        return fig, ax
 
     def _df(self):
         if self.data is None:

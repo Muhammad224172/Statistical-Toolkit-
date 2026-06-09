@@ -196,7 +196,7 @@ class ClassicalToolbox:
         crit = result["critical_values"]
         xs = self._plot_range(dist, statistic, crit)
         ys = dist.pdf(xs)
-        fig, ax = plt.subplots(figsize=(8, 4.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(xs, ys, color="#1f4e79", lw=2, label=f"Null {result['distribution']} distribution")
         self._shade_critical(ax, dist, xs, crit, result["alternative"])
         ax.axvline(statistic, color="#c00000", lw=2, label=f"Observed statistic = {statistic:.3f}")
@@ -209,7 +209,7 @@ class ClassicalToolbox:
 
     def plot_confidence_interval(self, result):
         low, high = result["confidence_interval"]
-        fig, ax = plt.subplots(figsize=(7, 2.5))
+        fig, ax = plt.subplots(figsize=(10, 4))
         ax.hlines(1, low, high, color="#1f4e79", lw=5)
         ax.plot(result["estimate"], 1, "o", color="#c00000", label="Estimate")
         ax.axvline(result["null_value"], color="black", ls="--", label="Null value")

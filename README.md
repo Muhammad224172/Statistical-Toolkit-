@@ -1,17 +1,21 @@
-# Statistical Toolbox
+# Statistical Toolkit
 
-Notebook-only statistical toolbox for ENS505 course topics:
+A notebook-only statistical toolbox for ENS505 course topics. It contains four class-based Python modules and four demonstration notebooks that load real local datasets, summarize them, then run editable statistical blocks with calculations and diagrams.
 
-- significance testing for normal distributions
-- ANOVA and treatment contrasts
-- simple and multiple linear regression
-- Bayesian conjugate inference
+Q-Q plots are intentionally excluded because they were not covered in the course material used for this project.
 
-Each notebook loads a local dataset, shows a data summary, and then runs independent editable test blocks. Change the variables at the top of a block, rerun it, and the numerical result plus diagram update.
+## What Is Included
 
-## Setup
+- Classical inference for means, variances, proportions, chi-square tests, and F tests
+- ANOVA tables, treatment contrasts, linear combinations, and Bonferroni comparisons
+- Simple and multiple linear regression, coefficient tests, tests for parts of beta, general linear F-tests, prediction intervals, and Scheffe bands
+- Bayesian conjugate inference, sequential updating, weak vs strong priors, Monte Carlo sampling, importance sampling, rejection sampling, Gamma-Poisson, and Dirichlet-Multinomial
+- Automatic large PNG plot saving in `plots/`
+- Default datasets plus custom dataset support
 
-From this folder:
+## First-Time Setup
+
+Open PowerShell in this project folder and run:
 
 ```powershell
 python -m venv .venv
@@ -21,90 +25,93 @@ python -m ipykernel install --user --name statistical-toolkit --display-name "Py
 jupyter notebook
 ```
 
-Open the notebooks in the `notebooks/` folder.
+Then open the notebooks from the `notebooks/` folder.
 
-When a notebook opens, use the kernel named `Python (Statistical Toolkit)`. This avoids accidentally running the notebooks with Anaconda or another Python installation.
+When a notebook opens, select the kernel named `Python (Statistical Toolkit)`.
 
-If you see an error mentioning NumPy 1.x/2.x, PyArrow, NumExpr, Bottleneck, or SciPy, you are almost certainly using the wrong kernel. Switch the notebook kernel to `Python (Statistical Toolkit)`, then run the cells again.
+If you see an error mentioning NumPy 1.x/2.x, PyArrow, NumExpr, Bottleneck, or SciPy, you are probably using Anaconda or another Python environment instead of the project environment. Switch the notebook kernel to `Python (Statistical Toolkit)` and rerun the cells.
 
-## Files
+## Project Files
 
-Core classes:
+Core modules:
 
-- `classical_toolbox.py` contains `ClassicalToolbox`
-- `anova_toolbox.py` contains `ANOVAToolbox`
-- `regression_toolbox.py` contains `RegressionToolbox`
-- `bayesian_toolbox.py` contains `BayesianToolbox`
+- `classical_toolbox.py`
+- `anova_toolbox.py`
+- `regression_toolbox.py`
+- `bayesian_toolbox.py`
 
-Demonstrations:
+Canonical notebooks:
 
 - `notebooks/01_normal_inference_body_temperature.ipynb`
 - `notebooks/02_anova_plant_growth.ipynb`
 - `notebooks/03_regression_airquality.ipynb`
 - `notebooks/04_bayesian_titanic.ipynb`
 
-Local data:
+Default datasets:
 
-- `data/body_temperature.csv`: body temperature teaching dataset
-- `data/plant_growth.csv`: R `PlantGrowth` dataset
-- `data/airquality.csv`: R `airquality` dataset excerpt
-- `data/titanic.csv`: Titanic passenger manifest excerpt
+- `data/body_temperature.csv`
+- `data/plant_growth.csv`
+- `data/airquality.csv`
+- `data/titanic.csv`
 
-## How To Use A Test Block
+Maintenance script:
 
-Each notebook starts with a dataset setup block. The default setting uses the included dataset:
+- `scripts/generate_notebooks.py` regenerates clean notebooks with no saved outputs.
+
+## How To Use Custom Datasets
+
+Each notebook starts with a setup block:
 
 ```python
 use_default_dataset = True
-```
-
-To use your own data:
-
-1. Put your file in the project folder or in the `data/` folder.
-2. Use one of these formats: `.csv`, `.xlsx`, `.xls`, or `.json`.
-3. Change the setup block:
-
-```python
-use_default_dataset = False
 custom_file_name = "my_data.csv"
 ```
 
-The file name must include the extension. If the file is not found, the notebook will tell you to put it in the project folder or `data/` folder.
+To use your own dataset:
 
-After loading, each notebook validates whether the dataset is suitable for the planned use case. If your column names are different, edit the setup block and the later test blocks to use your column names.
+1. Put your file in the project root folder or in `data/`.
+2. Use `.csv`, `.xlsx`, `.xls`, or `.json`.
+3. Include the file extension in `custom_file_name`.
+4. Change `use_default_dataset = False`.
+5. Edit the column names in the setup block and later test blocks.
 
-## Custom Dataset Requirements
+The notebooks validate common problems: missing columns, nonnumeric columns, insufficient groups, invalid binary outcomes, contrast length mismatches, invalid prior parameters, and regression designs with too few complete rows.
 
-For `01_normal_inference_body_temperature.ipynb`:
+## Notebook Requirements
 
-- Needs at least one numeric measurement column for mean/variance tests.
-- Needs a grouping column with at least two groups for two-sample tests.
+`01_normal_inference_body_temperature.ipynb`:
+
+- Needs a numeric measurement column for mean and variance tests.
+- Needs a group column with at least two groups for two-sample tests.
+- Needs paired before/after columns for a real paired test.
 - Default columns are `temperature` and `gender`.
 
-For `02_anova_plant_growth.ipynb`:
+`02_anova_plant_growth.ipynb`:
 
-- Needs one categorical group/treatment column.
-- Needs one numeric response column.
-- Needs at least two groups, with at least two numeric observations per group.
+- Needs a categorical treatment column.
+- Needs a numeric response column.
+- Needs at least two groups.
 - Default columns are `group` and `weight`.
 
-For `03_regression_airquality.ipynb`:
+`03_regression_airquality.ipynb`:
 
 - Needs one numeric response column.
 - Needs one or more numeric predictor columns.
-- Needs more complete numeric rows than the number of regression coefficients.
+- Needs more complete numeric rows than regression coefficients.
 - Default response is `Ozone`; default predictors are `Temp`, `Wind`, and `Solar.R`.
 
-For `04_bayesian_titanic.ipynb`:
+`04_bayesian_titanic.ipynb`:
 
 - Beta-Binomial blocks need a binary success column.
 - Normal-Normal blocks need a numeric continuous column.
-- Subgroup examples need a categorical subgroup column.
-- Default columns are `survived`, `age`, and `sex`.
+- Dirichlet-Multinomial blocks need a categorical column.
+- Default columns are `survived`, `age`, and `pclass`.
 
-## Editable Test Inputs
+## Editable Blocks
 
-Each test block starts with editable inputs, for example:
+Every method is in its own notebook block. Edit the inputs at the top of a block, then rerun that block.
+
+Classical example:
 
 ```python
 null_value = 98.6
@@ -112,23 +119,37 @@ alternative = "two-sided"
 alpha = 0.05
 ```
 
-For ANOVA and regression contrasts, the notebook prints the group or coefficient order first. The vector must follow that order.
-
-Example ANOVA contrast:
+ANOVA contrast example:
 
 ```python
 contrast_vector = [-1, 0, 1]
 ```
 
-Example regression linear combination:
+Regression linear combination example:
 
 ```python
 contrast_vector = [0, 1, 0, 0]
 ```
 
-## Bayesian Blocks
+For contrasts and linear combinations, always follow the printed group or coefficient order.
 
-The Bayesian notebook explicitly prints the conjugate model:
+## Plots
+
+Every plotting block saves a large PNG to:
+
+```text
+plots/
+```
+
+The default size is about `10 x 6` inches or larger, saved at `dpi=200`. Plot files are generated artifacts and are ignored by Git through `.gitignore`.
+
+To regenerate plots, run the notebooks from top to bottom. You can delete `plots/` at any time; it will be recreated automatically.
+
+## Bayesian Model Statements
+
+The Bayesian notebook prints the conjugate model statements directly.
+
+Beta-Binomial:
 
 ```text
 Likelihood: X | p ~ Binomial(n, p)
@@ -136,7 +157,7 @@ Prior: p ~ Beta(alpha, beta)
 Posterior: p | X ~ Beta(alpha + x, beta + n - x)
 ```
 
-and, for a normal mean with known variance:
+Normal-Normal mean with known variance:
 
 ```text
 Likelihood: X_i | mu ~ Normal(mu, sigma^2)
@@ -144,17 +165,32 @@ Prior: mu ~ Normal(mu0, tau0^2)
 Posterior: mu | x ~ Normal(mu_n, tau_n^2)
 ```
 
-Plots show prior, likelihood, posterior, credible interval, and the hypothesized parameter value.
+Dirichlet-Multinomial:
 
-## Notes For Presentation
+```text
+Likelihood: counts | p ~ Multinomial(n, p)
+Prior: p ~ Dirichlet(alpha)
+Posterior: p | counts ~ Dirichlet(alpha + counts)
+```
 
-The calculations use explicit formulas with NumPy and SciPy rather than `statsmodels`. This makes the implementation easier to explain in terms of the course notes:
+## Validation Checklist
 
-- test statistic
-- null distribution
-- critical region
-- p-value
-- confidence or credible interval
-- decision or posterior probability statement
+Before presentation, run:
 
-Classical inference uses rejection regions. Bayesian inference uses posterior distributions and credible regions, so the diagrams show where the hypothesized value falls under the posterior rather than a classical critical region.
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m compileall classical_toolbox.py anova_toolbox.py regression_toolbox.py bayesian_toolbox.py
+jupyter notebook
+```
+
+Then run each notebook from a clean kernel using `Python (Statistical Toolkit)`.
+
+Expected checks:
+
+- All four modules compile.
+- All notebooks run from top to bottom.
+- Classical, ANOVA, and regression tests show critical-region diagrams.
+- Bayesian blocks show prior, likelihood, posterior, credible intervals, and hypothesized values where applicable.
+- Sequential Bayesian updating equals the one-shot posterior.
+- Dirichlet posterior parameters equal prior parameters plus observed category counts.
+- No Q-Q plot functions or notebook calls remain.
