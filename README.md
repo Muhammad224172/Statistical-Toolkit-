@@ -31,6 +31,32 @@ When a notebook opens, select the kernel named `Python (Statistical Toolkit)`.
 
 If you see an error mentioning NumPy 1.x/2.x, PyArrow, NumExpr, Bottleneck, or SciPy, you are probably using Anaconda or another Python environment instead of the project environment. Switch the notebook kernel to `Python (Statistical Toolkit)` and rerun the cells.
 
+## How To Open It Later
+
+After the first-time setup is finished, you do not need to recreate the environment. Open PowerShell in this project folder and run:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+jupyter notebook
+```
+
+In the browser page that opens:
+
+1. Open the `notebooks/` folder.
+2. Open one of the four notebooks.
+3. Go to `Kernel` then `Change kernel`.
+4. Select `Python (Statistical Toolkit)`.
+5. Run the notebook cells from top to bottom.
+
+Direct notebook paths:
+
+- `notebooks/01_normal_inference_body_temperature.ipynb`
+- `notebooks/02_anova_plant_growth.ipynb`
+- `notebooks/03_regression_airquality.ipynb`
+- `notebooks/04_bayesian_titanic.ipynb`
+
+If `jupyter notebook` opens but the project files are not visible, close it, make sure PowerShell is inside this project folder, and run `jupyter notebook` again.
+
 ## Project Files
 
 Core modules:
